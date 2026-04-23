@@ -36,16 +36,16 @@ Navigate to **[http://localhost:3000](http://localhost:3000)**
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎨 **Visual State Diagram** | Canvas-based state machine with animated transitions |
-| 📚 **Stack Visualization** | Real-time stack operations (push/pop) |
-| 📜 **Input Tape Display** | Track read head position as input is consumed |
-| ⚡ **Auto-Generate** | Create PDAs from natural language descriptions |
-| ✏️ **Manual Configuration** | Fully editable states, alphabets, and transitions |
-| 📝 **Step Log** | Detailed explanation of each simulation step |
+|  **Visual State Diagram** | Canvas-based state machine with animated transitions |
+|  **Stack Visualization** | Real-time stack operations (push/pop) |
+|  **Input Tape Display** | Track read head position as input is consumed |
+|  **Auto-Generate** | Create PDAs from natural language descriptions |
+|  **Manual Configuration** | Fully editable states, alphabets, and transitions |
+|  **Step Log** | Detailed explanation of each simulation step |
 | 🌓 **Dark/Light Theme** | Toggle for comfortable viewing |
 | ⌨️ **Keyboard Shortcuts** | Fast controls without mouse |
 | 📱 **Responsive Design** | Works on desktop, tablet, and mobile |

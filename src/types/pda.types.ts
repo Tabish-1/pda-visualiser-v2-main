@@ -9,6 +9,13 @@ export interface Transition {
   push: string;  // push to stack
 }
 
+// One active branch in the nondeterministic simulation
+export interface Configuration {
+  state: string;
+  stack: string[];
+  inputPosition: number;
+}
+
 export interface PDAConfig {
   states: string[];
   inputAlphabet: string[];
@@ -20,16 +27,14 @@ export interface PDAConfig {
 
 export interface StepResult {
   success: boolean;
-  currentState: string;
-  stackContents: string[];
+  activeConfigurations: Configuration[];
   inputPosition: number;
+  accepted: boolean;
+  rejected: boolean;
   message?: string;
-  accepted?: boolean;
 }
 
 export interface SimulationStep {
-  state: string;
-  stack: string[];
+  configurations: Configuration[];
   position: number;
-  transition?: Transition;
 }

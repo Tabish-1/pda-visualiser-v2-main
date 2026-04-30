@@ -1,140 +1,142 @@
 
+// Main PDA simulation engine — nondeterministic (tracks all branches simultaneously)
 
-// main PDA simulation engine
-
-import { Stack } from './Stack';
-import { PDAConfig, StepResult, SimulationStep, Transition } from '../types/pda.types';
+import { PDAConfig, Configuration, StepResult, SimulationStep } from '../types/pda.types';
 
 export class PDAEngine {
   private config: PDAConfig;
-  private currentState: string;
-  private stack: Stack;
-  private inputPosition: number;
+  private activeConfigurations: Configuration[];
   private history: SimulationStep[];
 
   constructor(config: PDAConfig) {
     this.config = config;
-    this.currentState = config.startState;
-    this.stack = new Stack();
-    this.inputPosition = 0;
-    this.history = [];
-    
-    // Save initial state
-    this.history.push({
-      state: this.currentState,
-      stack: this.stack.getContents(),
-      position: this.inputPosition
-    });
+    const initial: Configuration = { state: config.startState, stack: [], inputPosition: 0 };
+    this.activeConfigurations = this.epsilonClosure([initial]);
+    this.history = [{ configurations: [...this.activeConfigurations], position: 0 }];
   }
 
-  getCurrentState(): string {
-    return this.currentState;
+  getCurrentStates(): string[] {
+    return [...new Set(this.activeConfigurations.map(c => c.state))];
   }
 
-  getStack(): string[] {
-    return this.stack.getContents();
+  getConfigurations(): Configuration[] {
+    return this.activeConfigurations;
   }
 
   getInputPosition(): number {
-    return this.inputPosition;
+    if (this.activeConfigurations.length === 0) return 0;
+    return Math.max(...this.activeConfigurations.map(c => c.inputPosition));
   }
 
   getHistory(): SimulationStep[] {
     return this.history;
   }
 
-  // Find all valid transitions from current configuration
-  findTransitions(state: string, inputSymbol: string, stackTop: string): Transition[] {
-    return this.config.transitions.filter(t => {
-      const matchesState = t.from === state;
-      const matchesInput = t.read === inputSymbol || t.read === 'ε' || t.read === '';
-      const matchesStack = t.pop === stackTop || t.pop === 'ε' || t.pop === '';
-      return matchesState && matchesInput && matchesStack;
-    });
+  private isEpsilon(s: string): boolean {
+    return s === '' || s === 'ε';
   }
 
-  // Execute one step of the PDA
-  step(input: string): StepResult {
-    const currentSymbol = this.inputPosition < input.length 
-      ? input[this.inputPosition] 
-      : 'ε';
-    const stackTop = this.stack.peek() || 'ε';
-
-    // Find possible transitions
-    const possibleTransitions = this.findTransitions(
-      this.currentState, 
-      currentSymbol, 
-      stackTop
-    );
-
-    if (possibleTransitions.length === 0) {
-      return {
-        success: false,
-        currentState: this.currentState,
-        stackContents: this.stack.getContents(),
-        inputPosition: this.inputPosition,
-        message: "No valid transition found"
-      };
+  private applyTransition(config: Configuration, t: Transition, consumeInput: boolean): Configuration {
+    const newStack = [...config.stack];
+    if (!this.isEpsilon(t.pop)) newStack.pop();
+    if (!this.isEpsilon(t.push)) {
+      for (let i = t.push.length - 1; i >= 0; i--) newStack.push(t.push[i]);
     }
-
-    // Take the first valid transition (for DPDA)
-    const transition = possibleTransitions[0];
-    this.executeTransition(transition);
-
-    // Check if we've accepted
-    const isAtEnd = this.inputPosition >= input.length;
-    const isInAcceptState = this.config.acceptStates.includes(this.currentState);
-    const stackIsEmpty = this.stack.isEmpty();
-
     return {
-      success: true,
-      currentState: this.currentState,
-      stackContents: this.stack.getContents(),
-      inputPosition: this.inputPosition,
-      accepted: isAtEnd && isInAcceptState && stackIsEmpty
+      state: t.to,
+      stack: newStack,
+      inputPosition: config.inputPosition + (consumeInput ? 1 : 0)
     };
   }
 
-  // Execute a single transition
-  private executeTransition(transition: Transition): void {
-    // Pop from stack if needed
-    if (transition.pop !== 'ε' && transition.pop !== '') {
-      this.stack.pop();
+  private canApply(config: Configuration, t: Transition, symbol: string | null): boolean {
+    if (t.from !== config.state) return false;
+
+    const isEpsilonRead = this.isEpsilon(t.read);
+    if (symbol === null) {
+      if (!isEpsilonRead) return false;
+    } else {
+      if (isEpsilonRead || t.read !== symbol) return false;
     }
 
-    // Push to stack if needed (in reverse for multi-char pushes)
-    if (transition.push !== 'ε' && transition.push !== '') {
-      for (let i = transition.push.length - 1; i >= 0; i--) {
-        this.stack.push(transition.push[i]);
+    if (!this.isEpsilon(t.pop)) {
+      const stackTop = config.stack[config.stack.length - 1];
+      if (stackTop === undefined || stackTop !== t.pop) return false;
+    }
+
+    return true;
+  }
+
+  // Compute epsilon closure: follow all epsilon transitions exhaustively
+  private epsilonClosure(configs: Configuration[]): Configuration[] {
+    const visited = new Set<string>();
+    const result: Configuration[] = [];
+
+    const visit = (config: Configuration, depth: number) => {
+      if (depth > 100) return; // guard against infinite epsilon loops
+      const key = `${config.state}|${config.inputPosition}|${config.stack.join(',')}`;
+      if (visited.has(key)) return;
+      visited.add(key);
+      result.push(config);
+
+      for (const t of this.config.transitions) {
+        if (!this.isEpsilon(t.read)) continue;
+        if (!this.canApply(config, t, null)) continue;
+        visit(this.applyTransition(config, t, false), depth + 1);
+      }
+    };
+
+    for (const config of configs) visit(config, 0);
+    return result;
+  }
+
+  // Advance all active branches by consuming one input symbol
+  step(input: string): StepResult {
+    const nextMap = new Map<string, Configuration>();
+
+    for (const config of this.activeConfigurations) {
+      if (config.inputPosition >= input.length) continue;
+      const symbol = input[config.inputPosition];
+
+      for (const t of this.config.transitions) {
+        if (this.isEpsilon(t.read)) continue; // epsilon transitions handled in closure
+        if (!this.canApply(config, t, symbol)) continue;
+        const next = this.applyTransition(config, t, true);
+        const key = `${next.state}|${next.inputPosition}|${next.stack.join(',')}`;
+        if (!nextMap.has(key)) nextMap.set(key, next);
       }
     }
 
-    // Move to next state
-    this.currentState = transition.to;
+    const withClosure = this.epsilonClosure([...nextMap.values()]);
+    this.activeConfigurations = withClosure;
 
-    // Advance input if we read a symbol
-    if (transition.read !== 'ε' && transition.read !== '') {
-      this.inputPosition++;
-    }
+    const maxPos = withClosure.length > 0
+      ? Math.max(...withClosure.map(c => c.inputPosition))
+      : (this.history[this.history.length - 1]?.position ?? 0);
 
-    // Save step to history
-    this.history.push({
-      state: this.currentState,
-      stack: this.stack.getContents(),
-      position: this.inputPosition,
-      transition
-    });
+    this.history.push({ configurations: [...withClosure], position: maxPos });
+
+    const accepted = withClosure.some(c =>
+      c.inputPosition >= input.length &&
+      this.config.acceptStates.includes(c.state) &&
+      c.stack.length === 0
+    );
+
+    return {
+      success: withClosure.length > 0,
+      activeConfigurations: withClosure,
+      inputPosition: maxPos,
+      accepted,
+      rejected: withClosure.length === 0
+    };
   }
 
-  // Reset to initial state
   reset(): void {
-    this.currentState = this.config.startState;
-    this.stack.clear();
-    this.inputPosition = 0;
-    this.history = [{
-      state: this.currentState,
-      stack: this.stack.getContents(),
-      position: this.inputPosition
-    }];
+    const initial: Configuration = { state: this.config.startState, stack: [], inputPosition: 0 };
+    this.activeConfigurations = this.epsilonClosure([initial]);
+    this.history = [{ configurations: [...this.activeConfigurations], position: 0 }];
   }
 }
+
+// Re-export Transition so engine consumers don't need to import types separately
+export type { Transition } from '../types/pda.types';

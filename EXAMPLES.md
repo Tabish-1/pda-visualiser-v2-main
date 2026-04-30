@@ -1,4 +1,4 @@
-# 📚 PDA Visualizer — Example Data & Test Cases
+#  PDA Visualizer — Example Data & Test Cases
 
 > **Complete reference for testing the PDA Visualizer with sample configurations and expected results.**
 
@@ -14,7 +14,7 @@
 
 ---
 
-## 🟢 Pre-loaded Examples (Built-in)
+##  Pre-loaded Examples (Built-in)
 
 These are already available in the app — just click the example cards!
 
@@ -41,12 +41,12 @@ Stack Alphabet: Z0, A
 
 | # | Input | Expected | Steps | Notes |
 |---|-------|----------|-------|-------|
-| 1 | `(())` | ✅ ACCEPTED | 5 steps | Properly nested |
-| 2 | `()()` | ✅ ACCEPTED | 5 steps | Two pairs |
-| 3 | `((()))` | ✅ ACCEPTED | 7 steps | Three nested |
-| 4 | `(()` | ❌ REJECTED | 4 steps | Missing `)` |
-| 5 | `())` | ❌ REJECTED | 3 steps | Extra `)` |
-| 6 | `)(` | ❌ REJECTED | 1 step | Wrong order |
+| 1 | `(())` | ACCEPTED | 5 steps | Properly nested |
+| 2 | `()()` | ACCEPTED | 5 steps | Two pairs |
+| 3 | `((()))` | ACCEPTED | 7 steps | Three nested |
+| 4 | `(()` | REJECTED | 4 steps | Missing `)` |
+| 5 | `())` | REJECTED | 3 steps | Extra `)` |
+| 6 | `)(` | REJECTED | 1 step | Wrong order |
 
 ---
 
@@ -74,14 +74,14 @@ Stack Alphabet: Z0, A
 
 | # | Input | Expected | Steps | Notes |
 |---|-------|----------|-------|-------|
-| 1 | `aabb` | ✅ ACCEPTED | 6 steps | 2 a's, 2 b's |
-| 2 | `aaabbb` | ✅ ACCEPTED | 8 steps | 3 a's, 3 b's |
-| 3 | `ab` | ✅ ACCEPTED | 4 steps | 1 a, 1 b |
-| 4 | `aaaabbbb` | ✅ ACCEPTED | 10 steps | 4 a's, 4 b's |
-| 5 | `aaab` | ❌ REJECTED | 5 steps | Unequal count |
-| 6 | `aabbcc` | ❌ REJECTED | 6 steps | Extra `c` |
-| 7 | `abab` | ❌ REJECTED | 3 steps | Mixed order |
-| 8 | `bbaa` | ❌ REJECTED | 1 step | Wrong order |
+| 1 | `aabb` | ACCEPTED | 6 steps | 2 a's, 2 b's |
+| 2 | `aaabbb` | ACCEPTED | 8 steps | 3 a's, 3 b's |
+| 3 | `ab` | ACCEPTED | 4 steps | 1 a, 1 b |
+| 4 | `aaaabbbb` | ACCEPTED | 10 steps | 4 a's, 4 b's |
+| 5 | `aaab` | REJECTED | 5 steps | Unequal count |
+| 6 | `aabbcc` | REJECTED | 6 steps | Extra `c` |
+| 7 | `abab` | REJECTED | 3 steps | Mixed order |
+| 8 | `bbaa` | REJECTED | 1 step | Wrong order |
 
 ---
 
@@ -114,14 +114,14 @@ Stack Alphabet: Z0, A, B
 
 | # | Input | Expected | Steps | Notes |
 |---|-------|----------|-------|-------|
-| 1 | `abcba` | ✅ ACCEPTED | 7 steps | `ab` + `c` + `ba` |
-| 2 | `aacaa` | ✅ ACCEPTED | 5 steps | `a` + `c` + `a` |
-| 3 | `abacaba` | ✅ ACCEPTED | 9 steps | `aba` + `c` + `aba` |
-| 4 | `bccb` | ✅ ACCEPTED | 6 steps | `b` + `c` + `b` |
-| 5 | `abcd` | ❌ REJECTED | 5 steps | No `c` marker |
-| 6 | `abccba` | ❌ REJECTED | 7 steps | Two `c`'s |
-| 7 | `abc` | ❌ REJECTED | 4 steps | Missing second half |
-| 8 | `cba` | ❌ REJECTED | 2 steps | Wrong order |
+| 1 | `abcba` | ACCEPTED | 7 steps | `ab` + `c` + `ba` |
+| 2 | `aacaa` | ACCEPTED | 5 steps | `a` + `c` + `a` |
+| 3 | `abacaba` | ACCEPTED | 9 steps | `aba` + `c` + `aba` |
+| 4 | `bccb` | ACCEPTED | 6 steps | `b` + `c` + `b` |
+| 5 | `abcd` | REJECTED | 5 steps | No `c` marker |
+| 6 | `abccba` | REJECTED | 7 steps | Two `c`'s |
+| 7 | `abc` | REJECTED | 4 steps | Missing second half |
+| 8 | `cba` | REJECTED | 2 steps | Wrong order |
 
 ---
 
@@ -150,10 +150,10 @@ Stack Alphabet: Z0
 
 | # | Input | Expected | Notes |
 |---|-------|----------|-------|
-| 1 | `aa` | ✅ ACCEPTED | 2 a's (even) |
-| 2 | `aaaa` | ✅ ACCEPTED | 4 a's (even) |
-| 3 | `a` | ❌ REJECTED | 1 a (odd) |
-| 4 | `aaa` | ❌ REJECTED | 3 a's (odd) |
+| 1 | `aa` | ACCEPTED | 2 a's (even) |
+| 2 | `aaaa` | ACCEPTED | 4 a's (even) |
+| 3 | `a` | REJECTED | 1 a (odd) |
+| 4 | `aaa` | REJECTED | 3 a's (odd) |
 
 ---
 
@@ -180,11 +180,11 @@ Stack Alphabet: Z0
 
 | # | Input | Expected | Notes |
 |---|-------|----------|-------|
-| 1 | `abba` | ✅ ACCEPTED | Starts with `a` |
-| 2 | `a` | ✅ ACCEPTED | Just `a` |
-| 3 | `aa` | ✅ ACCEPTED | Starts with `a` |
-| 4 | `bba` | ❌ REJECTED | Starts with `b` |
-| 5 | `ba` | ❌ REJECTED | Starts with `b` |
+| 1 | `abba` | ACCEPTED | Starts with `a` |
+| 2 | `a` | ACCEPTED | Just `a` |
+| 3 | `aa` | ACCEPTED | Starts with `a` |
+| 4 | `bba` | REJECTED | Starts with `b` |
+| 5 | `ba` | REJECTED | Starts with `b` |
 
 ---
 
@@ -214,11 +214,11 @@ Stack Alphabet: Z0
 
 | # | Input | Expected | Notes |
 |---|-------|----------|-------|
-| 1 | `baab` | ✅ ACCEPTED | Ends with `ab` |
-| 2 | `ab` | ✅ ACCEPTED | Just `ab` |
-| 3 | `aaab` | ✅ ACCEPTED | Ends with `ab` |
-| 4 | `aba` | ❌ REJECTED | Ends with `a` |
-| 5 | `ba` | ❌ REJECTED | Ends with `a` |
+| 1 | `baab` | ACCEPTED | Ends with `ab` |
+| 2 | `ab` | ACCEPTED | Just `ab` |
+| 3 | `aaab` | ACCEPTED | Ends with `ab` |
+| 4 | `aba` | REJECTED | Ends with `a` |
+| 5 | `ba` | REJECTED | Ends with `a` |
 
 ---
 
@@ -245,13 +245,13 @@ Stack Alphabet: Z0
 
 | # | Input | Expected | Notes |
 |---|-------|----------|-------|
-| 1 | `aaabbb` | ✅ ACCEPTED | a's then b's |
-| 2 | `ab` | ✅ ACCEPTED | One each |
-| 3 | `aaa` | ✅ ACCEPTED | Only a's |
-| 4 | `bbb` | ✅ ACCEPTED | Only b's |
-| 5 | `ε` | ✅ ACCEPTED | Empty string |
-| 6 | `abab` | ❌ REJECTED | Mixed order |
-| 7 | `ba` | ❌ REJECTED | b before a |
+| 1 | `aaabbb` |ACCEPTED | a's then b's |
+| 2 | `ab` |ACCEPTED | One each |
+| 3 | `aaa` |ACCEPTED | Only a's |
+| 4 | `bbb` |ACCEPTED | Only b's |
+| 5 | `ε` |ACCEPTED | Empty string |
+| 6 | `abab` |REJECTED | Mixed order |
+| 7 | `ba` | REJECTED | b before a |
 
 ---
 
@@ -279,11 +279,11 @@ Stack Alphabet: Z0, A, B
 
 | # | Input | Expected | Notes |
 |---|-------|----------|-------|
-| 1 | `0011` | ✅ ACCEPTED | 2 zeros, 2 ones |
-| 2 | `01` | ✅ ACCEPTED | 1 zero, 1 one |
-| 3 | `0101` | ✅ ACCEPTED | 2 zeros, 2 ones |
-| 4 | `001` | ❌ REJECTED | More 0's |
-| 5 | `011` | ❌ REJECTED | More 1's |
+| 1 | `0011` |  ACCEPTED | 2 zeros, 2 ones |
+| 2 | `01` |  ACCEPTED | 1 zero, 1 one |
+| 3 | `0101` |  ACCEPTED | 2 zeros, 2 ones |
+| 4 | `001` |  REJECTED | More 0's |
+| 5 | `011` |  REJECTED | More 1's |
 
 ---
 

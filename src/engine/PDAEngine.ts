@@ -1,7 +1,7 @@
 
 // Main PDA simulation engine — nondeterministic (tracks all branches simultaneously)
 
-import { PDAConfig, Configuration, StepResult, SimulationStep } from '../types/pda.types';
+import { PDAConfig, Configuration, StepResult, SimulationStep, Transition } from '../types/pda.types';
 
 export class PDAEngine {
   private config: PDAConfig;

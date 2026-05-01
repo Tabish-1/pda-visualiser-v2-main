@@ -103,6 +103,7 @@ export default function PDAVisualiser() {
   // PDA configuration
   const [pda, setPda] = useState<PDA | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
+  const [selectedExample, setSelectedExample] = useState('');
   
   // Test input
   const [testInput, setTestInput] = useState('');
@@ -206,8 +207,27 @@ export default function PDAVisualiser() {
     setInputAlphabet(example.inputAlphabet.join(', '));
     setStackAlphabet(example.stackAlphabet.join(', '));
     setTestInput(example.testString);
+    setSelectedExample(key);
     setNlError('');
     resetSimulation(newPda);
+  }
+
+  function saveConfig() {
+    if (!pda) return;
+
+    const config = {
+      ...pda,
+      startState: getStartState(pda.states),
+      acceptStates: getAcceptStates(pda.states),
+      testString: testInput
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'pda-config.json';
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   function resetSimulation(nextPda: PDA | null = pda) {
@@ -266,6 +286,7 @@ export default function PDAVisualiser() {
     const radius = Math.min(width, height) / 3.5;
 
     const statePositions: Record<string, { x: number; y: number }> = {};
+    const stateRadius = 25;
     const angleStep = (2 * Math.PI) / states.length;
 
     states.forEach((s, i) => {
@@ -274,6 +295,7 @@ export default function PDAVisualiser() {
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle)
       };
+      statePositions[s.replace('*', '')] = statePositions[s];
     });
 
     const colors = {
@@ -286,6 +308,31 @@ export default function PDAVisualiser() {
       cyan: getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()
     };
 
+    const drawArrowHead = (x: number, y: number, angle: number, color: string) => {
+      const size = 10;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - size * Math.cos(angle - Math.PI / 6), y - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x - size * Math.cos(angle + Math.PI / 6), y - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    };
+
+    const drawLabel = (text: string, x: number, y: number, color: string, font: string) => {
+      ctx.font = font;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const textWidth = ctx.measureText(text).width;
+      const paddingX = 8;
+      const labelHeight = 20;
+
+      ctx.fillStyle = colors.surface;
+      ctx.fillRect(x - textWidth / 2 - paddingX, y - labelHeight / 2, textWidth + paddingX * 2, labelHeight);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    };
+
     // Draw transitions FIRST (behind states)
     pda.transitions.forEach(t => {
       const fromPos = statePositions[t.from];
@@ -293,51 +340,53 @@ export default function PDAVisualiser() {
       if (!fromPos || !toPos) return;
       
       const isActive = currentState && currentState.replace('*', '') === t.from.replace('*', '');
+      const strokeColor = isActive ? colors.accent : colors.text2;
+      const labelColor = isActive ? colors.accent : colors.text;
       
       if (t.from === t.to) {
         // Self-loop
-        const loopSize = 40;
+        const loopStartX = fromPos.x - stateRadius * 0.65;
+        const loopStartY = fromPos.y - stateRadius * 0.85;
+        const loopEndX = fromPos.x + stateRadius * 0.65;
+        const loopEndY = loopStartY;
+        const controlX = fromPos.x;
+        const controlY = fromPos.y - 88;
+
         ctx.beginPath();
-        ctx.moveTo(fromPos.x - 10, fromPos.y - 20);
-        ctx.quadraticCurveTo(fromPos.x - loopSize, fromPos.y - loopSize * 1.5, fromPos.x + 10, fromPos.y - 20);
-        ctx.strokeStyle = isActive ? colors.accent : colors.text2;
+        ctx.moveTo(loopStartX, loopStartY);
+        ctx.quadraticCurveTo(controlX, controlY, loopEndX, loopEndY);
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = isActive ? 2 : 1.5;
         ctx.stroke();
-        
-        // Label background
-        ctx.fillStyle = colors.surface;
-        ctx.fillRect(fromPos.x - 40, fromPos.y - loopSize * 1.5 - 10, 80, 20);
-        
-        // Label text
-        ctx.fillStyle = isActive ? colors.accent : colors.text;
-        ctx.font = 'bold 10px JetBrains Mono';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${t.read},${t.pop}→${t.push || 'ε'}`, fromPos.x, fromPos.y - loopSize * 1.5);
+
+        drawArrowHead(loopEndX, loopEndY, Math.atan2(loopEndY - controlY, loopEndX - controlX), strokeColor);
+        drawLabel(`${t.read},${t.pop}→${t.push || 'ε'}`, fromPos.x, controlY - 8, labelColor, 'bold 10px JetBrains Mono');
       } else {
         // Regular transition
+        const dx = toPos.x - fromPos.x;
+        const dy = toPos.y - fromPos.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const unitX = dx / distance;
+        const unitY = dy / distance;
+        const startX = fromPos.x + unitX * (stateRadius + 4);
+        const startY = fromPos.y + unitY * (stateRadius + 4);
+        const endX = toPos.x - unitX * (stateRadius + 8);
+        const endY = toPos.y - unitY * (stateRadius + 8);
         const midX = (fromPos.x + toPos.x) / 2;
         const midY = (fromPos.y + toPos.y) / 2;
-        const controlX = midX - (toPos.y - fromPos.y) * 0.3;
-        const controlY = midY + (toPos.x - fromPos.x) * 0.3;
+        const curveOffset = Math.min(80, Math.max(35, distance * 0.22));
+        const controlX = midX - unitY * curveOffset;
+        const controlY = midY + unitX * curveOffset;
         
         ctx.beginPath();
-        ctx.moveTo(fromPos.x, fromPos.y);
-        ctx.quadraticCurveTo(controlX, controlY, toPos.x, toPos.y);
-        ctx.strokeStyle = isActive ? colors.accent : colors.text2;
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = isActive ? 2 : 1.5;
         ctx.stroke();
-        
-        // Label background
-        ctx.fillStyle = colors.surface;
-        ctx.fillRect(controlX - 35, controlY - 10, 70, 20);
-        
-        // Label text
-        ctx.fillStyle = isActive ? colors.accent : colors.text;
-        ctx.font = 'bold 11px JetBrains Mono';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${t.read}/${t.pop}→${t.push || 'ε'}`, controlX, controlY - 10);
+
+        drawArrowHead(endX, endY, Math.atan2(endY - controlY, endX - controlX), strokeColor);
+        drawLabel(`${t.read}/${t.pop}→${t.push || 'ε'}`, controlX, controlY - 10, labelColor, 'bold 11px JetBrains Mono');
       }
     });
 
@@ -347,7 +396,6 @@ export default function PDAVisualiser() {
       const isStart = s.replace('*', '') === startState;
       const isAccept = acceptStates.includes(s.replace('*', ''));
       const isCurrent = currentState && currentState.replace('*', '') === s.replace('*', '');
-      const stateRadius = 25;
       
       // Glow for current state
       if (isCurrent) {
@@ -419,11 +467,11 @@ export default function PDAVisualiser() {
 
   function advanceSnapshot(activePda: PDA, inputValue: string, snapshot: SimulationSnapshot): AdvanceResult {
     if (snapshot.step >= 500) {
-      return { status: 'rejected', snapshot, message: '❌ REJECTED — Max steps reached' };
+      return { status: 'rejected', snapshot, message: ' REJECTED — Max steps reached' };
     }
 
     if (isAcceptingConfiguration(snapshot.state, snapshot.stack, snapshot.inputPosition, activePda, inputValue)) {
-      return { status: 'accepted', snapshot, message: '✅ ACCEPTED — String matches!' };
+      return { status: 'accepted', snapshot, message: ' ACCEPTED — String matches!' };
     }
 
     const readSymbol = snapshot.inputPosition < inputValue.length ? inputValue[snapshot.inputPosition] : 'ε';
@@ -445,7 +493,7 @@ export default function PDAVisualiser() {
       return {
         status: 'rejected',
         snapshot,
-        message: `❌ REJECTED — No transition from ${snapshot.state}`
+        message: ` REJECTED — No transition from ${snapshot.state}`
       };
     }
 
@@ -515,7 +563,7 @@ export default function PDAVisualiser() {
 
     if (result.status === 'accepted') {
       setResultStatus('accepted');
-      setResultMessage('✅ ACCEPTED — String matches!');
+      setResultMessage(' ACCEPTED — String matches!');
       addStepLog(`Step ${result.snapshot.step}: ACCEPTED`);
     } else if (result.status === 'rejected') {
       setResultStatus('rejected');
@@ -553,7 +601,7 @@ export default function PDAVisualiser() {
 
       if (result.status === 'accepted') {
         setResultStatus('accepted');
-        setResultMessage('✅ ACCEPTED — String matches!');
+        setResultMessage(' ACCEPTED — String matches!');
         setIsRunning(false);
         addStepLog(`Step ${snapshot.step}: ACCEPTED`);
         return;
@@ -673,7 +721,7 @@ export default function PDAVisualiser() {
               {nlError && <p className="form-error">{nlError}</p>}
             </div>
             <button className="btn btn-primary btn-full" onClick={handleGenerate}>
-              <span>⚡ Auto-Generate</span>
+              <span> Auto-Generate</span>
             </button>
           </div>
 
@@ -686,7 +734,7 @@ export default function PDAVisualiser() {
               {Object.entries(examples).map(([key, example]) => (
                 <div
                   key={key}
-                  className="example-card"
+                  className={`example-card ${selectedExample === key ? 'active' : ''}`}
                   onClick={() => loadExample(key)}
                 >
                   <div className="example-name">{example.name}</div>
@@ -702,30 +750,41 @@ export default function PDAVisualiser() {
               <h3 className="sidebar-title" style={{ margin: 0 }}>
                 <span></span> Configuration (Editable)
               </h3>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setStatesInput('');
-                  setInputAlphabet('');
-                  setStackAlphabet('');
-                  setTransitions([]);
-                  setPda(null);
-                  resetSimulation();
-                  setTestInput('');
-                  const canvas = canvasRef.current;
-                  if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                      ctx.clearRect(0, 0, canvas.width, canvas.height);
-                      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
-                      ctx.fillRect(0, 0, canvas.width, canvas.height);
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={saveConfig}
+                  disabled={!pda}
+                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
+                >
+                  Save Config
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+	                  onClick={() => {
+	                    setStatesInput('');
+	                    setInputAlphabet('');
+	                    setStackAlphabet('');
+	                    setTransitions([]);
+	                    setPda(null);
+	                    setSelectedExample('');
+	                    resetSimulation();
+	                    setTestInput('');
+                    const canvas = canvasRef.current;
+                    if (canvas) {
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                      }
                     }
-                  }
-                }}
-                style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
-              >
-                 Clear All
-              </button>
+                  }}
+                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
+                >
+                  Clear All
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">States (comma-separated)</label>
@@ -779,6 +838,7 @@ export default function PDAVisualiser() {
                 };
                 
                 setPda(newPda);
+                setSelectedExample('');
                 resetSimulation(newPda);
                 alert(`Configuration updated with states: ${states.join(', ')}\nState diagram updated!`);
               }}

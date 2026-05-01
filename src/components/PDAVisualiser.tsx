@@ -111,7 +111,6 @@ export const PDAVisualiser: React.FC = () => {
 
     setIsRunning(true);
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const status = getStatus(e.getConfigurations(), input);
       if (status !== 'stepping' && status !== 'ready') {
@@ -359,7 +358,7 @@ export const PDAVisualiser: React.FC = () => {
             <li>Click <strong>Start / Step</strong> once to initialise, then again to advance one symbol at a time</li>
             <li>Or click <strong>Play All</strong> to run the full simulation automatically</li>
             <li><strong>All nondeterministic branches run in parallel</strong> — blue states are active, green are accepting</li>
-            <li>Each branch's stack is shown separately in the Stack panel</li>
+            <li>Each branch&apos;s stack is shown separately in the Stack panel</li>
             <li>Use <strong>Save Config</strong> to export your PDA and reload it later with <em>Load File</em></li>
           </ol>
         </div>

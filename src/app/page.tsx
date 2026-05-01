@@ -820,7 +820,7 @@ export default function PDAVisualiser() {
           {/* Controls */}
           <div className="viz-panel">
             <div className="viz-panel-header">
-              <span className="viz-panel-title">🎮 Simulation Controls</span>
+              <span className="viz-panel-title"> Simulation Controls</span>
               <div className="shortcuts-hint">
                 <span><kbd className="kbd">Space</kbd> Step</span>
                 <span><kbd className="kbd">R</kbd> Reset</span>

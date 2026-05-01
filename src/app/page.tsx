@@ -557,7 +557,7 @@ export default function PDAVisualiser() {
           <div className="sidebar-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <h3 className="sidebar-title" style={{ margin: 0 }}>
-                <span>⚙️</span> Configuration (Editable)
+                <span></span> Configuration (Editable)
               </h3>
               <button
                 className="btn btn-secondary btn-sm"
